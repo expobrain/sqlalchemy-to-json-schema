@@ -26,7 +26,7 @@ repos:
           - --autofix
       - id: trailing-whitespace
   - repo: https://github.com/myint/autoflake
-    rev: v2.1.1
+    rev: v2.2.0
     hooks:
       - id: autoflake
         args:
@@ -45,7 +45,7 @@ repos:
           - flake8-bugbear
           - flake8-datetime-utcnow-plugin
   - repo: https://github.com/asottile/pyupgrade
-    rev: v3.6.0
+    rev: v3.8.0
     hooks:
       - id: pyupgrade
         args:
