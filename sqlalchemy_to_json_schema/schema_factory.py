@@ -447,7 +447,7 @@ class SchemaFactory:
                 elif action == ColumnPropertyType.FOREIGNKEY:  # ColumnProperty
                     for column in prop.columns:
                         sub = {}
-                        if type(column.type) != VisitableType:
+                        if type(column.type) is not VisitableType:
                             itype, sub["type"] = self.classifier[column.type]
 
                             self._add_restriction_if_found(sub, column, itype)
