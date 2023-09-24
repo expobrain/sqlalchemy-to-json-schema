@@ -13,7 +13,7 @@ from sqlalchemy_to_json_schema.walkers import StructuralWalker
 @pytest.fixture(scope="module")
 def db() -> AutomapBase:
     dbname = os.path.join(os.path.abspath(os.path.dirname(__file__)), "reflection.db")
-    engine = create_engine(f"sqlite:///{dbname}")
+    engine = create_engine(f"sqlite:///{dbname}", future=True)
     Base = automap_base()
     Base.prepare(autoload_with=engine)
     return Base  # type: ignore[no-any-return]
