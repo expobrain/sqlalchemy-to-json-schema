@@ -15,7 +15,7 @@ def db() -> AutomapBase:
     dbname = os.path.join(os.path.abspath(os.path.dirname(__file__)), "reflection.db")
     engine = create_engine(f"sqlite:///{dbname}")
     Base = automap_base()
-    Base.prepare(engine, reflect=True)
+    Base.prepare(autoload_with=engine)
     return Base  # type: ignore[no-any-return]
 
 
