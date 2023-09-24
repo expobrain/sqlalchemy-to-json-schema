@@ -27,7 +27,7 @@ target models are here. Group and User.
 # -*- coding:utf-8 -*-
 import sqlalchemy as sa
 import sqlalchemy.orm as orm
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import declarative_base
 
 Base = declarative_base()
 

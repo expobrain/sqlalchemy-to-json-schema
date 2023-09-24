@@ -4,8 +4,7 @@ from typing import Any, Mapping
 
 import sqlalchemy as sa
 import sqlalchemy.orm as orm
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import Mapped
+from sqlalchemy.orm import Mapped, declarative_base
 
 from sqlalchemy_to_json_schema.decisions import UseForeignKeyIfPossibleDecision
 from sqlalchemy_to_json_schema.schema_factory import (

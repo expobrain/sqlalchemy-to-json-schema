@@ -2,7 +2,7 @@ from typing import Any, Iterable, Tuple, Type, Union
 
 import sqlalchemy as sa
 from sqlalchemy import TypeDecorator
-from sqlalchemy.ext.declarative import DeclarativeMeta, declarative_base
+from sqlalchemy.orm import DeclarativeMeta, declarative_base
 from sqlalchemy.sql.type_api import TypeEngine
 from sqlalchemy.types import String
 
