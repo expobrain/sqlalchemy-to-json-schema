@@ -323,7 +323,7 @@ class TestSchemaFactory:
                 self.inner = inner
 
             def _compiler_dispatch(self, visitor: Any, **kw: Any) -> Any:
-                return self.inner._compiler_dispatch(visitor, **kw)  # type: ignore[attr-defined]
+                return self.inner._compiler_dispatch(visitor, **kw)
 
             def is_not_support_big_integer(self) -> bool:
                 return True

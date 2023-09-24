@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any, Dict, Iterator, Tuple, Union
 
+from sqlalchemy.orm import MapperProperty
 from sqlalchemy.orm.base import MANYTOMANY, MANYTOONE
 from sqlalchemy.orm.properties import ColumnProperty
 from sqlalchemy.orm.relationships import RelationshipProperty
@@ -9,7 +10,7 @@ from sqlalchemy_to_json_schema.types import ColumnPropertyType
 from sqlalchemy_to_json_schema.walkers import AbstractWalker
 
 DecisionResult = Tuple[
-    ColumnPropertyType, Union[ColumnProperty, RelationshipProperty], Dict[str, Any]
+    ColumnPropertyType, Union[ColumnProperty, RelationshipProperty, MapperProperty], Dict[str, Any]
 ]
 
 
@@ -18,7 +19,7 @@ class AbstractDecision(ABC):
     def decision(
         self,
         walker: AbstractWalker,
-        prop: Union[ColumnProperty, RelationshipProperty],
+        prop: MapperProperty,
         /,
         *,
         toplevel: bool = False,
@@ -30,7 +31,7 @@ class RelationDecision(AbstractDecision):
     def decision(
         self,
         walker: AbstractWalker,
-        prop: Union[ColumnProperty, RelationshipProperty],
+        prop: MapperProperty,
         /,
         *,
         toplevel: bool = False,
@@ -47,7 +48,7 @@ class UseForeignKeyIfPossibleDecision(AbstractDecision):
     def decision(
         self,
         walker: AbstractWalker,
-        prop: Union[ColumnProperty, RelationshipProperty],
+        prop: MapperProperty,
         /,
         *,
         toplevel: bool = False,

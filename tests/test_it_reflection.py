@@ -25,7 +25,7 @@ def _makeOne() -> SchemaFactory:
 
 def test_it(db: AutomapBase) -> None:
     target = _makeOne()
-    schema = target(db.classes.artist)
+    schema = target(db.classes.artist)  # type: ignore[arg-type]
     expected = {
         "title": "artist",
         "properties": {
@@ -48,7 +48,7 @@ def test_it(db: AutomapBase) -> None:
 
 def test_it2(db: AutomapBase) -> None:
     target = _makeOne()
-    schema = target(db.classes.track)
+    schema = target(db.classes.track)  # type: ignore[arg-type]
     expected = {
         "title": "track",
         "properties": {

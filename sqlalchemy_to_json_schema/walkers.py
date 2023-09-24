@@ -6,7 +6,7 @@ from typing import Any, Iterator, Sequence
 from loguru import logger
 from sqlalchemy.ext.declarative import DeclarativeMeta
 from sqlalchemy.inspection import inspect
-from sqlalchemy.orm import Mapper
+from sqlalchemy.orm import Mapper, MapperProperty
 from sqlalchemy.orm.properties import ColumnProperty
 from sqlalchemy.orm.relationships import RelationshipProperty
 
@@ -49,7 +49,7 @@ class AbstractWalker(ABC):
         return self.__class__(model, history=self.history)
 
     @abstractmethod
-    def walk(self) -> Iterator[ColumnProperty | RelationshipProperty]:
+    def walk(self) -> Iterator[MapperProperty]:
         pass
 
 
@@ -57,7 +57,7 @@ class AbstractWalker(ABC):
 
 
 class ForeignKeyWalker(AbstractWalker):
-    def iterate(self) -> Iterator[ColumnProperty]:
+    def iterate(self) -> Iterator[MapperProperty]:
         for c in self.mapper.local_table.columns:
             if c.name not in self.mapper._props:
                 for prop in self.mapper.iterate_properties:
@@ -69,7 +69,7 @@ class ForeignKeyWalker(AbstractWalker):
             else:
                 yield self.mapper._props[c.name]  # danger!! not immutable
 
-    def walk(self) -> Iterator[ColumnProperty | RelationshipProperty]:
+    def walk(self) -> Iterator[MapperProperty]:
         for prop in self.iterate():
             if self.includes is None or prop.key in self.includes:
                 if self.excludes is None or prop.key not in self.excludes:
@@ -77,7 +77,7 @@ class ForeignKeyWalker(AbstractWalker):
 
 
 class NoForeignKeyWalker(AbstractWalker):
-    def iterate(self) -> Iterator[ColumnProperty]:
+    def iterate(self) -> Iterator[MapperProperty]:
         for c in self.mapper.local_table.columns:
             if c.name not in self.mapper._props:
                 for prop in self.mapper.iterate_properties:
@@ -89,7 +89,7 @@ class NoForeignKeyWalker(AbstractWalker):
             else:
                 yield self.mapper._props[c.name]  # danger!! not immutable
 
-    def walk(self) -> Iterator[ColumnProperty | RelationshipProperty]:
+    def walk(self) -> Iterator[MapperProperty]:
         for prop in self.iterate():
             if self.includes is None or prop.key in self.includes:
                 if self.excludes is None or prop.key not in self.excludes:
@@ -98,7 +98,7 @@ class NoForeignKeyWalker(AbstractWalker):
 
 
 class StructuralWalker(AbstractWalker):
-    def iterate(self) -> Iterator[ColumnProperty]:
+    def iterate(self) -> Iterator[MapperProperty]:
         for c in self.mapper.local_table.columns:
             if c.name not in self.mapper._props:
                 for prop in self.mapper.iterate_properties:
@@ -112,7 +112,7 @@ class StructuralWalker(AbstractWalker):
         for prop in self.mapper.relationships:
             yield prop
 
-    def walk(self) -> Iterator[ColumnProperty | RelationshipProperty]:
+    def walk(self) -> Iterator[MapperProperty]:
         for prop in self.iterate():
             if isinstance(prop, (ColumnProperty, RelationshipProperty)):
                 if self.includes is None or prop.key in self.includes:

@@ -34,14 +34,14 @@ from typing import (
 )
 
 import sqlalchemy.types as t
-from sqlalchemy import Column
+from sqlalchemy import Enum
 from sqlalchemy.dialects import postgresql as postgresql_types
 from sqlalchemy.ext.declarative import DeclarativeMeta
-from sqlalchemy.orm import ColumnProperty
+from sqlalchemy.orm import MapperProperty
 from sqlalchemy.orm.base import ONETOMANY
-from sqlalchemy.orm.relationships import RelationshipProperty
+from sqlalchemy.sql.elements import NamedColumn
 from sqlalchemy.sql.type_api import TypeEngine
-from sqlalchemy.sql.visitors import VisitableType
+from sqlalchemy.sql.visitors import Visitable
 
 from sqlalchemy_to_json_schema.decisions import AbstractDecision, RelationDecision
 from sqlalchemy_to_json_schema.exceptions import InvalidStatus
@@ -78,32 +78,32 @@ default_column_to_schema: DefaultColumnToSchemaDict = {
 
 
 # restriction
-def string_max_length(column: Column, sub: Dict[str, int], /) -> None:
-    if column.type.length is not None:
+def string_max_length(column: NamedColumn, sub: Dict[str, int], /) -> None:
+    if hasattr(column.type, "length") and column.type.length is not None:
         sub["maxLength"] = column.type.length
 
 
-def enum_one_of(column: Column, sub: Dict[str, list], /) -> None:
-    sub["enum"] = list(column.type.enums)
+def enum_one_of(column: NamedColumn[Enum], sub: Dict[str, list], /) -> None:
+    sub["enum"] = list(column.type.enums)  # type: ignore[attr-defined]
 
 
-def datetime_format(column: Column, sub: Dict[str, str], /) -> None:
+def datetime_format(column: NamedColumn, sub: Dict[str, str], /) -> None:
     sub["format"] = "date-time"
 
 
-def date_format(column: Column, sub: Dict[str, str], /) -> None:
+def date_format(column: NamedColumn, sub: Dict[str, str], /) -> None:
     sub["format"] = "date"
 
 
-def time_format(column: Column, sub: Dict[str, str], /) -> None:
+def time_format(column: NamedColumn, sub: Dict[str, str], /) -> None:
     sub["format"] = "time"
 
 
-def uuid_format(column: Column, sub: Dict[str, str], /) -> None:
+def uuid_format(column: NamedColumn, sub: Dict[str, str], /) -> None:
     sub["format"] = "uuid"
 
 
-TypeFormatFn = Callable[[Column, Dict[str, Any]], None]
+TypeFormatFn = Callable[[NamedColumn, Dict[str, Any]], None]
 RestrictionDict = Mapping[Type[TypeEngine], TypeFormatFn]
 
 default_restriction_dict: RestrictionDict = {
@@ -129,12 +129,12 @@ class Classifier:
         self.see_mro = see_mro
         self.see_impl = see_impl
 
-    def __getitem__(self, k: Type[Column], /) -> Tuple[Type[TypeEngine], str]:
+    def __getitem__(self, k: TypeEngine, /) -> Tuple[Type[TypeEngine], str]:
         cls = k.__class__
 
         _, mapped = get_class_mapping(
             self.mapping,  # type: ignore[arg-type]
-            cls,  # type: ignore[arg-type]
+            cls,
             see_mro=self.see_mro,
             see_impl=self.see_impl,
         )
@@ -226,7 +226,7 @@ class ChildFactory:
         self.splitter = splitter
         self.bidirectional = bidirectional
 
-    def default_excludes(self, prop: Union[ColumnProperty, RelationshipProperty], /) -> List[str]:
+    def default_excludes(self, prop: MapperProperty, /) -> List[str]:
         nullable_excludes = [
             prop.back_populates,
             None if prop.backref is None else prop.backref[0],
@@ -239,16 +239,14 @@ class ChildFactory:
 
         return excludes
 
-    def child_overrides(
-        self, prop: Union[ColumnProperty, RelationshipProperty], overrides: Any, /
-    ) -> Any:
+    def child_overrides(self, prop: MapperProperty, overrides: Any, /) -> Any:
         name = prop.key
         children = get_children(name, overrides.params, splitter=self.splitter)
         return overrides.__class__(children, pop_marker=overrides.pop_marker)
 
     def child_walker(
         self,
-        prop: Union[ColumnProperty, RelationshipProperty],
+        prop: MapperProperty,
         walker: AbstractWalker,
         /,
         *,
@@ -274,7 +272,7 @@ class ChildFactory:
 
     def child_schema(
         self,
-        prop: Union[ColumnProperty, RelationshipProperty],
+        prop: MapperProperty,
         schema_factory: Any,
         root_schema: Mapping[str, Any],
         walker: AbstractWalker,
@@ -326,9 +324,7 @@ class SchemaFactory:
         excludes: Optional[Sequence[str]] = None,
         overrides: Optional[dict] = None,
         depth: Optional[int] = None,
-        adjust_required: Optional[
-            Callable[[Union[ColumnProperty, RelationshipProperty], bool], bool]
-        ] = None,
+        adjust_required: Optional[Callable[[MapperProperty, bool], bool]] = None,
     ) -> Schema:
         walker = self.walker(model, includes=includes, excludes=excludes)
         overrides_manager = CollectionForOverrides(overrides or {})
@@ -351,7 +347,7 @@ class SchemaFactory:
         return schema
 
     def _add_items_if_array(
-        self, data: Dict[str, Any], column: Column, itype: Type[TypeEngine], /
+        self, data: Dict[str, Any], column: NamedColumn, itype: Type[TypeEngine], /
     ) -> None:
         if not isinstance(column.type, t.ARRAY):
             return
@@ -361,7 +357,7 @@ class SchemaFactory:
         data["items"] = {"type": item_type}
 
     def _add_restriction_if_found(
-        self, data: Dict[str, Any], column: Column, itype: Type[TypeEngine], /
+        self, data: Dict[str, Any], column: NamedColumn, itype: Type[TypeEngine], /
     ) -> None:
         for restriction_dict in self.restriction_set:
             _, fn = get_class_mapping(
@@ -382,7 +378,7 @@ class SchemaFactory:
         walker: AbstractWalker,
         root_schema: Schema,
         current_schema: Dict[str, Any],
-        prop: Union[ColumnProperty, RelationshipProperty],
+        prop: MapperProperty,
         val: Dict[str, Any],
         /,
     ) -> None:
@@ -412,7 +408,7 @@ class SchemaFactory:
         *,
         overrides: Optional[CollectionForOverrides] = None,
         depth: Optional[int] = None,
-        history: Optional[List[Union[ColumnProperty, RelationshipProperty]]] = None,
+        history: Optional[List[MapperProperty]] = None,
         toplevel: bool = True,
     ) -> Dict[str, Any]:
         definitions: Dict[str, Any] = {}
@@ -447,7 +443,7 @@ class SchemaFactory:
                 elif action == ColumnPropertyType.FOREIGNKEY:  # ColumnProperty
                     for column in prop.columns:
                         sub = {}
-                        if type(column.type) is not VisitableType:
+                        if type(column.type) is not Visitable:
                             itype, sub["type"] = self.classifier[column.type]
 
                             self._add_restriction_if_found(sub, column, itype)
@@ -480,9 +476,7 @@ class SchemaFactory:
         walker: AbstractWalker,
         /,
         *,
-        adjust_required: Optional[
-            Callable[[Union[ColumnProperty, RelationshipProperty], bool], bool]
-        ] = None,
+        adjust_required: Optional[Callable[[MapperProperty, bool], bool]] = None,
     ) -> List[str]:
         required_properties_set = set()
 
