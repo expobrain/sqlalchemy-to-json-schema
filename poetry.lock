@@ -528,13 +528,13 @@ pytest = ">=5,<8"
 
 [[package]]
 name = "pytest-timeout"
-version = "2.1.0"
+version = "2.2.0"
 description = "pytest plugin to abort hanging tests"
 optional = false
-python-versions = ">=3.6"
+python-versions = ">=3.7"
 files = [
-    {file = "pytest-timeout-2.1.0.tar.gz", hash = "sha256:c07ca07404c612f8abbe22294b23c368e2e5104b521c1790195561f37e1ac3d9"},
-    {file = "pytest_timeout-2.1.0-py3-none-any.whl", hash = "sha256:f6f50101443ce70ad325ceb4473c4255e9d74e3c7cd0ef827309dfa4c0d975c6"},
+    {file = "pytest-timeout-2.2.0.tar.gz", hash = "sha256:3b0b95dabf3cb50bac9ef5ca912fa0cfc286526af17afc806824df20c2f72c90"},
+    {file = "pytest_timeout-2.2.0-py3-none-any.whl", hash = "sha256:bde531e096466f49398a59f2dde76fa78429a09a12411466f88a07213e220de2"},
 ]
 
 [package.dependencies]
@@ -1028,4 +1028,4 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8,<3.12"
-content-hash = "223e8bdc05ea969839e842f854d36208348fa082a29a0a7bd4bb2a875e6b2705"
+content-hash = "12f795908531863427b2268b58a12447ff16c67ab7f10e4aa5aaaa82bb0c2d88"
