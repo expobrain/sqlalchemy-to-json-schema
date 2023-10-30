@@ -34,7 +34,7 @@ typing-extensions = ">=4.6"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.6"
-pytest = "^7.4.2"
+pytest = "^7.4.3"
 pytest-cov = "^4.0.0"
 pytest-clarity = "^1.0.1"
 pytest-testmon = "^2.0.13"
