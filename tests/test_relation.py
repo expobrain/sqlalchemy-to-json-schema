@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Mapping, Type
+from typing import Any, Mapping
 
 import sqlalchemy as sa
 import sqlalchemy.orm as orm
@@ -30,7 +30,7 @@ def get_reference(schema: Mapping[str, Any], root_schema: Mapping[str, Any]) -> 
     return target
 
 
-def _makeOne(walker: Type[AbstractWalker], *args: Any, **kwargs: Any) -> SchemaFactory:
+def _makeOne(walker: type[AbstractWalker], *args: Any, **kwargs: Any) -> SchemaFactory:
     return SchemaFactory(walker, *args, **kwargs)
 
 

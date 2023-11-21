@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any, Iterator, Optional, Sequence, Union
+from typing import Any, Iterator, Sequence
 
 from loguru import logger
 from sqlalchemy.ext.declarative import DeclarativeMeta
@@ -16,12 +16,12 @@ from sqlalchemy_to_json_schema.exceptions import InvalidStatus
 class AbstractWalker(ABC):
     def __init__(
         self,
-        model: Union[DeclarativeMeta, Mapper],
+        model: DeclarativeMeta | Mapper,
         /,
         *,
-        includes: Optional[Sequence[str]] = None,
-        excludes: Optional[Sequence[str]] = None,
-        history: Optional[Any] = None,
+        includes: Sequence[str] | None = None,
+        excludes: Sequence[str] | None = None,
+        history: Any | None = None,
     ) -> None:
         logger.debug("Walking model {model}, {type}", model=model, type=type(model))
 
@@ -39,9 +39,9 @@ class AbstractWalker(ABC):
         mapper: Mapper,
         /,
         *,
-        includes: Optional[Sequence[str]] = None,
-        excludes: Optional[Sequence[str]] = None,
-        history: Optional[Any] = None,
+        includes: Sequence[str] | None = None,
+        excludes: Sequence[str] | None = None,
+        history: Any | None = None,
     ) -> AbstractWalker:
         return self.__class__(mapper, includes=includes, excludes=excludes, history=history)
 
@@ -49,7 +49,7 @@ class AbstractWalker(ABC):
         return self.__class__(model, history=self.history)
 
     @abstractmethod
-    def walk(self) -> Iterator[Union[ColumnProperty, RelationshipProperty]]:
+    def walk(self) -> Iterator[ColumnProperty | RelationshipProperty]:
         pass
 
 
@@ -69,7 +69,7 @@ class ForeignKeyWalker(AbstractWalker):
             else:
                 yield self.mapper._props[c.name]  # danger!! not immutable
 
-    def walk(self) -> Iterator[Union[ColumnProperty, RelationshipProperty]]:
+    def walk(self) -> Iterator[ColumnProperty | RelationshipProperty]:
         for prop in self.iterate():
             if self.includes is None or prop.key in self.includes:
                 if self.excludes is None or prop.key not in self.excludes:
@@ -89,7 +89,7 @@ class NoForeignKeyWalker(AbstractWalker):
             else:
                 yield self.mapper._props[c.name]  # danger!! not immutable
 
-    def walk(self) -> Iterator[Union[ColumnProperty, RelationshipProperty]]:
+    def walk(self) -> Iterator[ColumnProperty | RelationshipProperty]:
         for prop in self.iterate():
             if self.includes is None or prop.key in self.includes:
                 if self.excludes is None or prop.key not in self.excludes:
@@ -112,7 +112,7 @@ class StructuralWalker(AbstractWalker):
         for prop in self.mapper.relationships:
             yield prop
 
-    def walk(self) -> Iterator[Union[ColumnProperty, RelationshipProperty]]:
+    def walk(self) -> Iterator[ColumnProperty | RelationshipProperty]:
         for prop in self.iterate():
             if isinstance(prop, (ColumnProperty, RelationshipProperty)):
                 if self.includes is None or prop.key in self.includes:
