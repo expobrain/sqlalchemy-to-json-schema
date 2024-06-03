@@ -903,13 +903,13 @@ files = [
 
 [[package]]
 name = "types-jsonschema"
-version = "4.21.0.20240311"
+version = "4.22.0.20240501"
 description = "Typing stubs for jsonschema"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "types-jsonschema-4.21.0.20240311.tar.gz", hash = "sha256:f7165ce70abd91df490c73b089873afd2899c5e56430ee495b64f851ad01f287"},
-    {file = "types_jsonschema-4.21.0.20240311-py3-none-any.whl", hash = "sha256:e872f5661513824edf9698f73a66c9c114713d93eab58699bd0532e7e6db5750"},
+    {file = "types-jsonschema-4.22.0.20240501.tar.gz", hash = "sha256:51c4ec05640909206551c8f57e630be570c4e0d86abda75d9d947521dffef6db"},
+    {file = "types_jsonschema-4.22.0.20240501-py3-none-any.whl", hash = "sha256:5cacc80cffef3cbbdd928954feb0f3d218d062b47333ca50841c27039efae29d"},
 ]
 
 [package.dependencies]
@@ -1028,4 +1028,4 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "76525a0895b8e8d0ae3ba15c148a1a4630d3334468c7d4d1afc8b639d603a33f"
+content-hash = "4ad0df05e715a3c9228c8404c6a0be0e80117d8a4726889585038aab0d5889cb"
