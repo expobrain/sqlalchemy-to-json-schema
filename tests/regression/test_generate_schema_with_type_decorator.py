@@ -2,6 +2,7 @@ from collections.abc import Iterable
 from typing import Any, Union
 
 import sqlalchemy as sa
+from result import Result, is_ok
 from sqlalchemy import TypeDecorator
 from sqlalchemy.orm import DeclarativeMeta, declarative_base
 from sqlalchemy.sql.type_api import TypeEngine
@@ -11,13 +12,13 @@ from sqlalchemy_to_json_schema.schema_factory import Schema, SchemaFactory
 from sqlalchemy_to_json_schema.walkers import StructuralWalker
 
 
-def _callFUT(model: DeclarativeMeta, /) -> Schema:
+def _callFUT(model: DeclarativeMeta, /) -> Result[Schema, str]:
     # see: https://github.com/expobrain/sqlalchemy_to_json_schema/issues/6
 
     factory = SchemaFactory(StructuralWalker)
-    schema = factory(model)
+    schema_result = factory(model)
 
-    return schema
+    return schema_result
 
 
 def _makeType(impl_: Union[type[TypeEngine], TypeEngine]) -> type[TypeDecorator]:
@@ -48,7 +49,9 @@ def test_it() -> None:
         color: sa.Column[str] = sa.Column(Choice(choices=candidates, length=1), nullable=False)
 
     result = _callFUT(Hascolor)
-    assert result["properties"]["color"] == {"type": "string", "maxLength": 1}
+
+    assert is_ok(result)
+    assert result.value["properties"]["color"] == {"type": "string", "maxLength": 1}
 
 
 def test_it__impl_is_not_callable() -> None:
@@ -62,4 +65,6 @@ def test_it__impl_is_not_callable() -> None:
         color: sa.Column[str] = sa.Column(Choice(choices=candidates), nullable=False)
 
     result = _callFUT(Hascolor)
-    assert result["properties"]["color"] == {"type": "string", "maxLength": 1}
+
+    assert is_ok(result)
+    assert result.unwrap()["properties"]["color"] == {"type": "string", "maxLength": 1}

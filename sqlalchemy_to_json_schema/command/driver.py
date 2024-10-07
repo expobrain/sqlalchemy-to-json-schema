@@ -7,6 +7,7 @@ from types import ModuleType
 from typing import Any, Callable, Optional, Union, cast
 
 import yaml
+from result import Err, Ok, Result
 from sqlalchemy.ext.declarative import DeclarativeMeta
 
 from sqlalchemy_to_json_schema.command.transformer import (
@@ -57,7 +58,9 @@ class Driver:
 
     def build_transformer(
         self, walker: Walker, decision: Decision, layout: Layout, /
-    ) -> Callable[[Iterable[Union[ModuleType, DeclarativeMeta]], Optional[int]], Schema]:
+    ) -> Callable[
+        [Iterable[Union[ModuleType, DeclarativeMeta]], Optional[int]], Result[Schema, str]
+    ]:
         walker_factory = WALKER_MAP[walker]
         relation_decision = DECISION_MAP[decision]()
         schema_factory = SchemaFactory(walker_factory, relation_decision=relation_decision)
@@ -73,7 +76,7 @@ class Driver:
         filename: Optional[Path] = None,
         format: Optional[Format] = None,
         depth: Optional[int] = None,
-    ) -> None:
+    ) -> Result[None, str]:
         modules_and_types = (load_module_or_symbol(target) for target in targets)
         modules_and_models = cast(
             Iterator[Union[ModuleType, DeclarativeMeta]],
@@ -84,8 +87,14 @@ class Driver:
             ),
         )
 
-        result = self.transformer(modules_and_models, depth)
-        self.dump(result, filename=filename, format=format)
+        schema = self.transformer(modules_and_models, depth)
+
+        if schema.is_err():
+            return Err(schema.unwrap_err())
+
+        self.dump(schema.unwrap(), filename=filename, format=format)
+
+        return Ok(None)
 
     def dump(
         self,

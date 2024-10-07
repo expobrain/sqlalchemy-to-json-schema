@@ -4,6 +4,7 @@ from typing import Any, Callable, Optional, Union
 
 import pytest
 import sqlalchemy as sa
+from result import Ok
 from sqlalchemy import BigInteger, FetchedValue, Integer, String, func
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.ext.hybrid import hybrid_property
@@ -126,15 +127,17 @@ class TestSchemaFactory:
         actual = target(Model)
 
         # assert
-        assert actual == {
-            "properties": {
-                "pk": {"type": "integer"},
-                "concatenable": {"type": "array", "items": {"type": expected_type}},
-            },
-            "required": ["pk"],
-            "title": "Model",
-            "type": "object",
-        }
+        assert actual == Ok(
+            {
+                "properties": {
+                    "pk": {"type": "integer"},
+                    "concatenable": {"type": "array", "items": {"type": expected_type}},
+                },
+                "required": ["pk"],
+                "title": "Model",
+                "type": "object",
+            }
+        )
 
     @pytest.mark.parametrize("walker_cls", WALKER_CLASSES)
     def test_column_postgres_uuid(self, walker_cls: type[AbstractWalker]) -> None:
@@ -147,12 +150,14 @@ class TestSchemaFactory:
 
         actual = schema_factory(Model)
 
-        assert actual == {
-            "properties": {"id": {"type": "string", "format": "uuid"}},
-            "required": ["id"],
-            "title": "Model",
-            "type": "object",
-        }
+        assert actual == Ok(
+            {
+                "properties": {"id": {"type": "string", "format": "uuid"}},
+                "required": ["id"],
+                "title": "Model",
+                "type": "object",
+            }
+        )
 
     @pytest.mark.parametrize("walker_cls", WALKER_CLASSES)
     def test_column_json(self, walker_cls: type[AbstractWalker]) -> None:
@@ -166,15 +171,17 @@ class TestSchemaFactory:
 
         actual = schema_factory(Model)
 
-        assert actual == {
-            "properties": {
-                "id": {"type": "integer"},
-                "data": {"type": "object"},
-            },
-            "required": ["id"],
-            "title": "Model",
-            "type": "object",
-        }
+        assert actual == Ok(
+            {
+                "properties": {
+                    "id": {"type": "integer"},
+                    "data": {"type": "object"},
+                },
+                "required": ["id"],
+                "title": "Model",
+                "type": "object",
+            }
+        )
 
     @pytest.mark.parametrize("walker_cls", WALKER_CLASSES)
     def test_hybrid_property(self, walker_cls: type[AbstractWalker]) -> None:
@@ -195,12 +202,14 @@ class TestSchemaFactory:
 
         actual = schema_factory(Model)
 
-        assert actual == {
-            "properties": {"id": {"type": "integer"}},
-            "required": ["id"],
-            "title": "Model",
-            "type": "object",
-        }
+        assert actual == Ok(
+            {
+                "properties": {"id": {"type": "integer"}},
+                "required": ["id"],
+                "title": "Model",
+                "type": "object",
+            }
+        )
 
     @pytest.mark.parametrize("walker_cls", WALKER_CLASSES)
     def test_hybrid_property_with_mixin(self, walker_cls: type[AbstractWalker]) -> None:
@@ -222,12 +231,14 @@ class TestSchemaFactory:
 
         actual = schema_factory(Model)
 
-        assert actual == {
-            "properties": {"id": {"type": "integer"}},
-            "required": ["id"],
-            "title": "Model",
-            "type": "object",
-        }
+        assert actual == Ok(
+            {
+                "properties": {"id": {"type": "integer"}},
+                "required": ["id"],
+                "title": "Model",
+                "type": "object",
+            }
+        )
 
     @pytest.mark.parametrize(
         "walker_cls, expected",
@@ -305,7 +316,7 @@ class TestSchemaFactory:
 
         actual = schema_factory(ModelWithRelationship)
 
-        assert actual == expected
+        assert actual == Ok(expected)
 
     @pytest.mark.parametrize("walker_cls", WALKER_CLASSES)
     @pytest.mark.parametrize(
@@ -351,9 +362,11 @@ class TestSchemaFactory:
         actual = target(Model)
 
         # assert
-        assert actual == {
-            "properties": {"pk": {"type": expected_type}},
-            "required": ["pk"],
-            "title": "Model",
-            "type": "object",
-        }
+        assert actual == Ok(
+            {
+                "properties": {"pk": {"type": expected_type}},
+                "required": ["pk"],
+                "title": "Model",
+                "type": "object",
+            }
+        )

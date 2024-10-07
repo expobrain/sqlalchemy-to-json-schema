@@ -6,6 +6,7 @@ from typing import Any
 import sqlalchemy as sa
 import sqlalchemy.orm as orm
 from pytest_unordered import unordered
+from result import is_ok
 from sqlalchemy.orm import Mapped, declarative_base
 
 from sqlalchemy_to_json_schema.decisions import UseForeignKeyIfPossibleDecision
@@ -56,39 +57,43 @@ def test_properties__default__includes__foreign_keys() -> None:
     target = _makeOne(ForeignKeyWalker)
     result = target(User)
 
-    assert "properties" in result
-    assert list(result["properties"].keys()) == unordered(["group_id", "name", "pk"])
+    assert is_ok(result)
+    assert "properties" in result.value
+    assert list(result.value["properties"].keys()) == unordered(["group_id", "name", "pk"])
 
 
 def test_properties__include_OnetoMany_relation() -> None:
     target = _makeOne(StructuralWalker, relation_decision=RelationDecision())
     result = target(User)
 
-    assert "required" in result
-    assert list(result["properties"]) == unordered(["group", "name", "pk"])
-    assert result["properties"]["group"] == {"$ref": "#/definitions/Group"}
+    assert is_ok(result)
+    assert "required" in result.value
+    assert list(result.value["properties"]) == unordered(["group", "name", "pk"])
+    assert result.value["properties"]["group"] == {"$ref": "#/definitions/Group"}
 
 
 def test_properties__include_OnetoMany_relation2() -> None:
     target = _makeOne(StructuralWalker, relation_decision=UseForeignKeyIfPossibleDecision())
     result = target(User)
 
-    assert "required" in result
-    assert list(result["properties"]) == unordered(["group_id", "name", "pk"])
-    assert result["properties"]["group_id"] == {"type": "integer", "relation": "group"}
+    assert is_ok(result)
+    assert "required" in result.value
+    assert list(result.value["properties"]) == unordered(["group_id", "name", "pk"])
+    assert result.value["properties"]["group_id"] == {"type": "integer", "relation": "group"}
 
 
 def test_properties__include_ManytoOne_backref() -> None:
     target = _makeOne(StructuralWalker)
     result = target(Group)
 
-    assert "required" in result
-    assert list(result["properties"]) == unordered(["name", "pk", "users"])
-    assert result["properties"]["users"] == {
+    assert is_ok(result)
+    assert "required" in result.value
+    assert list(result.value["properties"]) == unordered(["name", "pk", "users"])
+    assert result.value["properties"]["users"] == {
         "type": "array",
         "items": {"$ref": "#/definitions/User"},
     }
-    assert result["definitions"]["User"] == {
+    assert result.value["definitions"]["User"] == {
         "type": "object",
         "required": ["pk"],
         "properties": {
@@ -149,13 +154,14 @@ def test_properties__default_depth_is__traverse_all_chlidren() -> None:
     target = _makeOne(StructuralWalker)
     result = target(A0)
 
-    assert "required" in result
-    assert list(result["properties"]) == unordered(["children", "pk"])
-    children0 = get_reference(result["properties"]["children"]["items"], result)
-    children1 = get_reference(children0["properties"]["children"]["items"], result)
-    children2 = get_reference(children1["properties"]["children"]["items"], result)
-    children3 = get_reference(children2["properties"]["children"]["items"], result)
-    children4 = get_reference(children3["properties"]["children"]["items"], result)
+    assert is_ok(result)
+    assert "required" in result.value
+    assert list(result.value["properties"]) == unordered(["children", "pk"])
+    children0 = get_reference(result.value["properties"]["children"]["items"], result.value)
+    children1 = get_reference(children0["properties"]["children"]["items"], result.value)
+    children2 = get_reference(children1["properties"]["children"]["items"], result.value)
+    children3 = get_reference(children2["properties"]["children"]["items"], result.value)
+    children4 = get_reference(children3["properties"]["children"]["items"], result.value)
     assert children4["properties"]["pk"]["description"] == "primary key5"
 
 
@@ -163,9 +169,10 @@ def test_properties__default_depth_is__2__traverse_depth2() -> None:
     target = _makeOne(StructuralWalker)
     result = target(A0, depth=2)
 
-    assert "required" in result
-    assert list(result["properties"]) == unordered(["children", "pk"])
-    children0 = get_reference(result["properties"]["children"]["items"], result)
+    assert is_ok(result)
+    assert "required" in result.value
+    assert list(result.value["properties"]) == unordered(["children", "pk"])
+    children0 = get_reference(result.value["properties"]["children"]["items"], result.value)
     assert children0["properties"]["pk"]["description"] == "primary key1"
 
 
@@ -173,10 +180,11 @@ def test_properties__default_depth_is__3__traverse_depth3() -> None:
     target = _makeOne(StructuralWalker)
     result = target(A0, depth=3)
 
-    assert "required" in result
-    assert list(result["properties"]) == unordered(["children", "pk"])
-    children0 = get_reference(result["properties"]["children"]["items"], result)
-    children1 = get_reference(children0["properties"]["children"]["items"], result)
+    assert is_ok(result)
+    assert "required" in result.value
+    assert list(result.value["properties"]) == unordered(["children", "pk"])
+    children0 = get_reference(result.value["properties"]["children"]["items"], result.value)
+    children1 = get_reference(children0["properties"]["children"]["items"], result.value)
     assert children1["properties"]["pk"]["description"] == "primary key2"
 
 
@@ -208,18 +216,22 @@ class Z(Base):
 def test_properties__infinite_loop() -> None:
     target = _makeOne(StructuralWalker, relation_decision=RelationDecision())
     result = target(X)
-    ys = result["properties"]["ys"]
-    zs = get_reference(ys, result)["properties"]["zs"]
-    xs = get_reference(zs, result)["properties"]
-    assert "required" in result
-    assert list(result["properties"]) == unordered(["id", "ys"])
+
+    assert is_ok(result)
+
+    ys = result.value["properties"]["ys"]
+    zs = get_reference(ys, result.value)["properties"]["zs"]
+    xs = get_reference(zs, result.value)["properties"]
+    assert "required" in result.value
+    assert list(result.value["properties"]) == unordered(["id", "ys"])
     assert xs["id"]["description"] == "primary key"
 
 
 def test_properties__infinite_loop2() -> None:
     target = _makeOne(StructuralWalker, relation_decision=UseForeignKeyIfPossibleDecision())
     result = target(X)
-    assert "required" in result
-    assert list(result["properties"]) == unordered(["id", "y_id"])
 
-    assert result["properties"]["y_id"] == {"type": "integer", "relation": "ys"}
+    assert is_ok(result)
+    assert "required" in result.value
+    assert list(result.value["properties"]) == unordered(["id", "y_id"])
+    assert result.value["properties"]["y_id"] == {"type": "integer", "relation": "ys"}

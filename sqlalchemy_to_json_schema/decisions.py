@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Iterator
 from typing import Any, Union
 
+from result import Err, Ok, Result
 from sqlalchemy.orm import MapperProperty
 from sqlalchemy.orm.base import MANYTOMANY, MANYTOONE
 from sqlalchemy.orm.properties import ColumnProperty
@@ -24,7 +25,7 @@ class AbstractDecision(ABC):
         /,
         *,
         toplevel: bool = False,
-    ) -> Iterator[DecisionResult]:
+    ) -> Iterator[Result[DecisionResult, MapperProperty]]:
         pass
 
 
@@ -36,13 +37,13 @@ class RelationDecision(AbstractDecision):
         /,
         *,
         toplevel: bool = False,
-    ) -> Iterator[DecisionResult]:
+    ) -> Iterator[Result[DecisionResult, MapperProperty]]:
         if hasattr(prop, "mapper"):
-            yield ColumnPropertyType.RELATIONSHIP, prop, {}
+            yield Ok((ColumnPropertyType.RELATIONSHIP, prop, {}))
         elif hasattr(prop, "columns"):
-            yield ColumnPropertyType.FOREIGNKEY, prop, {}
+            yield Ok((ColumnPropertyType.FOREIGNKEY, prop, {}))
         else:
-            raise NotImplementedError(prop)
+            yield Err(prop)
 
 
 class UseForeignKeyIfPossibleDecision(AbstractDecision):
@@ -53,32 +54,42 @@ class UseForeignKeyIfPossibleDecision(AbstractDecision):
         /,
         *,
         toplevel: bool = False,
-    ) -> Iterator[DecisionResult]:
+    ) -> Iterator[Result[DecisionResult, MapperProperty]]:
         if hasattr(prop, "mapper"):
             if prop.direction == MANYTOONE:
                 if toplevel:
                     for c in prop.local_columns:
-                        yield ColumnPropertyType.FOREIGNKEY, walker.mapper._props[c.name], {
-                            "relation": prop.key
-                        }
+                        yield Ok(
+                            (
+                                ColumnPropertyType.FOREIGNKEY,
+                                walker.mapper._props[c.name],
+                                {"relation": prop.key},
+                            )
+                        )
                 else:
                     rp = walker.history[0]
                     if prop.local_columns != rp.remote_side:
                         for c in prop.local_columns:
-                            yield ColumnPropertyType.FOREIGNKEY, walker.mapper._props[c.name], {
-                                "relation": prop.key
-                            }
+                            yield Ok(
+                                (
+                                    ColumnPropertyType.FOREIGNKEY,
+                                    walker.mapper._props[c.name],
+                                    {"relation": prop.key},
+                                )
+                            )
             elif prop.direction == MANYTOMANY:
                 # logger.warning("skip mapper=%s, prop=%s is many to many.", walker.mapper, prop)
                 # fixme: this must return a ColumnPropertyType member
-                yield (
-                    {"type": "array", "items": {"type": "string"}},  # type: ignore[misc]
-                    prop,
-                    {},
+                yield Ok(
+                    (  # type: ignore[arg-type]
+                        {"type": "array", "items": {"type": "string"}},
+                        prop,
+                        {},
+                    )
                 )
             else:
-                yield ColumnPropertyType.RELATIONSHIP, prop, {}
+                yield Ok((ColumnPropertyType.RELATIONSHIP, prop, {}))
         elif hasattr(prop, "columns"):
-            yield ColumnPropertyType.FOREIGNKEY, prop, {}
+            yield Ok((ColumnPropertyType.FOREIGNKEY, prop, {}))
         else:
-            raise NotImplementedError(prop)
+            yield Err(prop)

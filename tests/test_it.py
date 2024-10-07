@@ -42,7 +42,7 @@ class AnotherUser(Base):
 
 def test_it_create_schema__and__valid_params__sucess() -> None:
     target = _makeOne()
-    schema = target(Group, excludes=["pk", "users.pk"])
+    schema = target(Group, excludes=["pk", "users.pk"]).unwrap()
     data = {
         "name": "ravenclaw",
         "color": "blue",
@@ -54,7 +54,7 @@ def test_it_create_schema__and__valid_params__sucess() -> None:
 
 def test_it_create_schema__and__invalid_params__failure() -> None:
     target = _makeOne()
-    schema = target(Group, excludes=["pk", "uesrs.pk"])
+    schema = target(Group, excludes=["pk", "uesrs.pk"]).unwrap()
     data = {
         "name": "blackmage",
         "color": "black",
@@ -67,7 +67,7 @@ def test_it_create_schema__and__invalid_params__failure() -> None:
 
 def test_it2_create_schema__and__valid_params__success() -> None:
     target = _makeOne()
-    schema = target(User, excludes=["pk", "group_id"])
+    schema = target(User, excludes=["pk", "group_id"]).unwrap()
     data = {"name": "foo", "group": {"name": "ravenclaw", "color": "blue", "pk": 1}}
     validate(data, schema)
 
