@@ -54,7 +54,7 @@ def test_it_create_schema__and__valid_params__sucess() -> None:
 
 def test_it_create_schema__and__invalid_params__failure() -> None:
     target = _makeOne()
-    schema = target(Group, excludes=["pk", "uesrs.pk"])
+    schema = target(Group, excludes=["pk", "users.pk"])
     data = {
         "name": "blackmage",
         "color": "black",
