@@ -2,6 +2,7 @@ import pytest
 import sqlalchemy as sa
 import sqlalchemy.orm as orm
 from pytest_unordered import unordered
+from result import Err, is_ok
 from sqlalchemy.orm import declarative_base
 
 from sqlalchemy_to_json_schema.exceptions import InvalidStatus
@@ -39,39 +40,44 @@ def test_type__is_object() -> None:
     target = _makeOne()
     result = target(Group)
 
-    assert "type" in result
-    assert result["type"] == "object"
+    assert is_ok(result)
+    assert "type" in result.unwrap()
+    assert result.unwrap()["type"] == "object"
 
 
 def test_properties__are__all_of_columns() -> None:
     target = _makeOne()
     result = target(Group)
 
-    assert "properties" in result
-    assert list(result["properties"].keys()) == unordered(["color", "name", "pk"])
+    assert is_ok(result)
+    assert "properties" in result.unwrap()
+    assert list(result.unwrap()["properties"].keys()) == unordered(["color", "name", "pk"])
 
 
 def test_title__id__model_class_name() -> None:
     target = _makeOne()
     result = target(Group)
 
-    assert "title" in result
-    assert result["title"] == Group.__name__
+    assert is_ok(result)
+    assert "title" in result.unwrap()
+    assert result.unwrap()["title"] == Group.__name__
 
 
 def test_description__is__docstring_of_model() -> None:
     target = _makeOne()
     result = target(Group)
 
-    assert "description" in result
-    assert result["description"] == Group.__doc__
+    assert is_ok(result)
+    assert "description" in result.unwrap()
+    assert result.unwrap()["description"] == Group.__doc__
 
 
 def test_properties__all__this_is_slackoff_little_bit__all_is_all() -> None:  # hmm.
     target = _makeOne()
     result = target(Group)
 
-    assert result["properties"] == {
+    assert is_ok(result)
+    assert result.unwrap()["properties"] == {
         "color": {
             "maxLength": 6,
             "enum": ["red", "green", "yellow", "blue"],
@@ -88,13 +94,17 @@ def test_properties__all__this_is_slackoff_little_bit__all_is_all() -> None:  # 
 def test__filtering_by__includes() -> None:
     target = _makeOne()
     result = target(Group, includes=["pk"])
-    assert list(result["properties"].keys()) == unordered(["pk"])
+
+    assert is_ok(result)
+    assert list(result.unwrap()["properties"].keys()) == unordered(["pk"])
 
 
 def test__filtering_by__excludes() -> None:
     target = _makeOne()
     result = target(Group, excludes=["pk"])
-    assert list(result["properties"].keys()) == unordered(["color", "name"])
+
+    assert is_ok(result)
+    assert list(result.unwrap()["properties"].keys()) == unordered(["color", "name"])
 
 
 def test__filtering_by__excludes_and_includes__conflict() -> None:
@@ -112,7 +122,8 @@ def test__overrides__add() -> None:
     overrides = {"name": {"maxLength": 100}}
     result = target(Group, includes=["name"], overrides=overrides)
 
-    assert result["properties"] == {"name": {"maxLength": 100, "type": "string"}}
+    assert is_ok(result)
+    assert result.unwrap()["properties"] == {"name": {"maxLength": 100, "type": "string"}}
 
 
 @pytest.mark.skip("to be fixed")
@@ -121,11 +132,14 @@ def test__overrides__pop() -> None:
     overrides = {"name": {"maxLength": pop_marker}}
     result = target(Group, includes=["name"], overrides=overrides)
 
-    assert result["properties"] == {"name": {"type": "string"}}
+    assert is_ok(result)
+    assert result.unwrap()["properties"] == {"name": {"type": "string"}}
 
 
 def test__overrides__wrong_column() -> None:
     target = _makeOne()
     overrides = {"*missing-field*": {"maxLength": 100}}
-    with pytest.raises(InvalidStatus):
-        target(Group, includes=["name"], overrides=overrides)
+
+    actual = target(Group, includes=["name"], overrides=overrides)
+
+    assert actual == Err(f"invalid overrides: {set(overrides.keys())}")

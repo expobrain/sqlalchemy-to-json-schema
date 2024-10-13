@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import pytest
+from result import Ok
 from sqlalchemy import create_engine
 from sqlalchemy.ext.automap import AutomapBase, automap_base
 
@@ -43,7 +44,7 @@ def test_it(db: AutomapBase) -> None:
         "type": "object",
         "required": ["artistid", "artistname"],
     }
-    assert schema == expected
+    assert schema == Ok(expected)
 
 
 def test_it2(db: AutomapBase) -> None:
@@ -66,4 +67,4 @@ def test_it2(db: AutomapBase) -> None:
         "type": "object",
         "required": ["trackid"],
     }
-    assert schema == expected
+    assert schema == Ok(expected)

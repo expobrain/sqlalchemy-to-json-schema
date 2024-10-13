@@ -26,6 +26,7 @@ from collections.abc import Mapping, Sequence
 from typing import Any, Callable
 
 import sqlalchemy.types as t
+from result import Err, Ok, Result
 from sqlalchemy import Enum
 from sqlalchemy.dialects import postgresql as postgresql_types
 from sqlalchemy.ext.declarative import DeclarativeMeta
@@ -36,7 +37,6 @@ from sqlalchemy.sql.type_api import TypeEngine
 from sqlalchemy.sql.visitors import Visitable
 
 from sqlalchemy_to_json_schema.decisions import AbstractDecision, RelationDecision
-from sqlalchemy_to_json_schema.exceptions import InvalidStatus
 from sqlalchemy_to_json_schema.types import ColumnPropertyType
 from sqlalchemy_to_json_schema.walkers import AbstractWalker
 
@@ -121,7 +121,7 @@ class Classifier:
         self.see_mro = see_mro
         self.see_impl = see_impl
 
-    def __getitem__(self, k: TypeEngine, /) -> tuple[type[TypeEngine], str]:
+    def __getitem__(self, k: TypeEngine, /) -> tuple[type[TypeEngine], TypeFormatFn]:
         cls = k.__class__
 
         _, mapped = get_class_mapping(
@@ -132,9 +132,9 @@ class Classifier:
         )
 
         if mapped is None:
-            raise InvalidStatus(f"notfound: {k}. (cls={cls})")
+            raise KeyError(f"notfound: {k}. (cls={cls})")
 
-        return cls, mapped  # type: ignore[return-value]
+        return (cls, mapped)
 
 
 def get_class_mapping(
@@ -269,8 +269,8 @@ class ChildFactory:
         *,
         depth: int | None = None,
         history: Any | None = None,
-    ) -> dict[str, Any]:
-        subschema = schema_factory._build_properties(
+    ) -> Result[dict[str, Any], str]:
+        subschema_result = schema_factory._build_properties(
             walker,
             root_schema,
             overrides,
@@ -278,10 +278,16 @@ class ChildFactory:
             history=history,
             toplevel=False,
         )
+
+        if subschema_result.is_err():
+            return subschema_result
+
+        subschema = subschema_result.unwrap()
+
         if prop.direction == ONETOMANY:
-            return {"type": "array", "items": subschema}
+            return Ok({"type": "array", "items": subschema})
         else:
-            return {"type": "object", "properties": subschema}
+            return Ok({"type": "object", "properties": subschema})
 
 
 class SchemaFactory:
@@ -313,17 +319,20 @@ class SchemaFactory:
         overrides: dict | None = None,
         depth: int | None = None,
         adjust_required: Callable[[MapperProperty, bool], bool] | None = None,
-    ) -> Schema:
+    ) -> Result[Schema, str]:
         walker = self.walker(model, includes=includes, excludes=excludes)
         overrides_manager = CollectionForOverrides(overrides or {})
 
         schema: dict[str, Any] = {"title": model.__name__, "type": "object"}
-        schema["properties"] = self._build_properties(
-            walker, schema, overrides_manager, depth=depth
-        )
+        properties = self._build_properties(walker, schema, overrides_manager, depth=depth)
+
+        if properties.is_err():
+            return Err(properties.unwrap_err())
+
+        schema["properties"] = properties.unwrap()
 
         if overrides_manager.not_used_keys:
-            raise InvalidStatus(f"invalid overrides: {overrides_manager.not_used_keys}")
+            return Err(f"invalid overrides: {overrides_manager.not_used_keys}")
 
         if model.__doc__:
             schema["description"] = model.__doc__
@@ -332,7 +341,8 @@ class SchemaFactory:
 
         if required:
             schema["required"] = required
-        return schema
+
+        return Ok(schema)
 
     def _add_items_if_array(
         self, data: dict[str, Any], column: NamedColumn, itype: type[TypeEngine], /
@@ -398,19 +408,26 @@ class SchemaFactory:
         depth: int | None = None,
         history: list[MapperProperty] | None = None,
         toplevel: bool = True,
-    ) -> dict[str, Any]:
+    ) -> Result[dict[str, Any], str]:
         definitions: dict[str, Any] = {}
 
         if depth is not None and depth <= 0:
-            return definitions
+            return Ok(definitions)
 
         if history is None:
             history = []
 
         for walked_prop in walker.walk():
-            for action, prop, opts in self.relation_decision.decision(
-                walker, walked_prop, toplevel=toplevel
-            ):
+            decision_iter = self.relation_decision.decision(walker, walked_prop, toplevel=toplevel)
+
+            for decision in decision_iter:
+                if decision.is_err():
+                    return Err(
+                        f"decision error: unsupported mapped property {decision.unwrap_err()}"
+                    )
+
+                action, prop, opts = decision.unwrap()
+
                 if action == ColumnPropertyType.RELATIONSHIP:  # RelationshipProperty
                     history.append(prop)
                     subwalker = self.child_factory.child_walker(prop, walker, history=history)
@@ -424,8 +441,12 @@ class SchemaFactory:
                         depth=depth,
                         history=history,
                     )
+
+                    if value.is_err():
+                        return value
+
                     self._add_property_with_reference(
-                        walker, root_schema, definitions, prop, value
+                        walker, root_schema, definitions, prop, value.unwrap()
                     )
                     history.pop()
                 elif action == ColumnPropertyType.FOREIGNKEY:  # ColumnProperty
@@ -440,9 +461,6 @@ class SchemaFactory:
                             if column.doc:
                                 sub["description"] = column.doc
 
-                            if overrides is None:
-                                raise RuntimeError("overrides is None")
-
                             if column.name in overrides:
                                 overrides.overrides(sub)
                             if opts:
@@ -454,10 +472,10 @@ class SchemaFactory:
 
                             definitions[column_name] = sub
                         else:
-                            raise NotImplementedError
+                            return Err(f"unsupported column type: {type(column.type)}")
                 else:  # immediate
                     definitions[prop.key] = action
-        return definitions
+        return Ok(definitions)
 
     def _detect_required(
         self,

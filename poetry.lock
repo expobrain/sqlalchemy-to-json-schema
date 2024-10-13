@@ -624,6 +624,20 @@ attrs = ">=22.2.0"
 rpds-py = ">=0.7.0"
 
 [[package]]
+name = "result"
+version = "0.17.0"
+description = "A Rust-like result type for Python"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "result-0.17.0-py3-none-any.whl", hash = "sha256:49fd668b4951ad15800b8ccefd98b6b94effc789607e19c65064b775570933e8"},
+    {file = "result-0.17.0.tar.gz", hash = "sha256:b73da420c0cb1a3bf741dbd41ff96dedafaad6a1b3ef437a9e33e380bb0d91cf"},
+]
+
+[package.dependencies]
+typing-extensions = {version = "*", markers = "python_version < \"3.10\""}
+
+[[package]]
 name = "rich"
 version = "13.3.5"
 description = "Render rich text, tables, progress bars, syntax highlighting, markdown and more to the terminal"
@@ -991,4 +1005,4 @@ dev = ["black (>=19.3b0)", "pytest (>=4.6.2)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "0e99495157ecb1b44d8faea4dd1c3a0243e64900329ea526e2a860e5d9d53a08"
+content-hash = "37545d46f8bfda3b0c34dcb8d990f8940cf81664dfabf0eeebda02e6bcbe4f0e"

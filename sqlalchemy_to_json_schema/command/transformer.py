@@ -5,6 +5,7 @@ from types import ModuleType
 from typing import Optional, Union
 
 from loguru import logger
+from result import Err, Ok, Result
 from sqlalchemy.ext.declarative import DeclarativeMeta
 from typing_extensions import TypeGuard
 
@@ -18,13 +19,13 @@ class AbstractTransformer(ABC):
     @abstractmethod
     def transform(
         self, rawtargets: Iterable[Union[ModuleType, DeclarativeMeta]], depth: Optional[int], /
-    ) -> Schema: ...
+    ) -> Result[Schema, str]: ...
 
 
 class JSONSchemaTransformer(AbstractTransformer):
     def transform(
         self, rawtargets: Iterable[Union[ModuleType, DeclarativeMeta]], depth: Optional[int], /
-    ) -> Schema:
+    ) -> Result[Schema, str]:
         definitions = {}
 
         for item in rawtargets:
@@ -33,33 +34,46 @@ class JSONSchemaTransformer(AbstractTransformer):
             elif inspect.ismodule(item):
                 partial_definitions = self.transform_by_module(item, depth)
             else:
-                TypeError(f"Expected a class or module, got {item}")
+                return Err(f"Expected a class or module, got {item}")
 
-            definitions.update(partial_definitions)
+            if partial_definitions.is_err():
+                return partial_definitions
 
-        return definitions
+            definitions.update(partial_definitions.unwrap())
 
-    def transform_by_model(self, model: DeclarativeMeta, depth: Optional[int], /) -> Schema:
+        return Ok(definitions)
+
+    def transform_by_model(
+        self, model: DeclarativeMeta, depth: Optional[int], /
+    ) -> Result[Schema, str]:
         return self.schema_factory(model, depth=depth)
 
-    def transform_by_module(self, module: ModuleType, depth: Optional[int], /) -> Schema:
+    def transform_by_module(
+        self, module: ModuleType, depth: Optional[int], /
+    ) -> Result[Schema, str]:
         subdefinitions = {}
         definitions = {}
         for basemodel in collect_models(module):
-            schema = self.schema_factory(basemodel, depth=depth)
+            schema_result = self.schema_factory(basemodel, depth=depth)
+
+            if schema_result.is_err():
+                return schema_result
+
+            schema = schema_result.unwrap()
+
             if "definitions" in schema:
                 subdefinitions.update(schema.pop("definitions"))
             definitions[schema["title"]] = schema
         d = {}
         d.update(subdefinitions)
         d.update(definitions)
-        return {"definitions": definitions}
+        return Ok({"definitions": definitions})
 
 
 class OpenAPI2Transformer(AbstractTransformer):
     def transform(
         self, rawtargets: Iterable[Union[ModuleType, DeclarativeMeta]], depth: Optional[int], /
-    ) -> Schema:
+    ) -> Result[Schema, str]:
         definitions = {}
 
         for target in rawtargets:
@@ -68,29 +82,46 @@ class OpenAPI2Transformer(AbstractTransformer):
             elif inspect.ismodule(target):
                 partial_definitions = self.transform_by_module(target, depth)
             else:
-                raise TypeError(f"Expected a class or module, got {target}")
+                return Err(f"Expected a class or module, got {target}")
 
-            definitions.update(partial_definitions)
+            if partial_definitions.is_err():
+                return partial_definitions
 
-        return {"definitions": definitions}
+            definitions.update(partial_definitions.unwrap())
 
-    def transform_by_model(self, model: DeclarativeMeta, depth: Optional[int], /) -> Schema:
+        return Ok({"definitions": definitions})
+
+    def transform_by_model(
+        self, model: DeclarativeMeta, depth: Optional[int], /
+    ) -> Result[Schema, str]:
         definitions = {}
-        schema = self.schema_factory(model, depth=depth)
+        schema_result = self.schema_factory(model, depth=depth)
+
+        if schema_result.is_err():
+            return schema_result
+
+        schema = schema_result.unwrap()
 
         if "definitions" in schema:
             definitions.update(schema.pop("definitions"))
 
         definitions[schema["title"]] = schema
 
-        return definitions
+        return Ok(definitions)
 
-    def transform_by_module(self, module: ModuleType, depth: Optional[int], /) -> Schema:
+    def transform_by_module(
+        self, module: ModuleType, depth: Optional[int], /
+    ) -> Result[Schema, str]:
         subdefinitions = {}
         definitions = {}
 
         for basemodel in collect_models(module):
-            schema = self.schema_factory(basemodel, depth=depth)
+            schema_result = self.schema_factory(basemodel, depth=depth)
+
+            if schema_result.is_err():
+                return schema_result
+
+            schema = schema_result.unwrap()
 
             if "definitions" in schema:
                 subdefinitions.update(schema.pop("definitions"))
@@ -101,7 +132,7 @@ class OpenAPI2Transformer(AbstractTransformer):
         d.update(subdefinitions)
         d.update(definitions)
 
-        return definitions
+        return Ok(definitions)
 
 
 class OpenAPI3Transformer(OpenAPI2Transformer):
@@ -118,8 +149,13 @@ class OpenAPI3Transformer(OpenAPI2Transformer):
 
     def transform(
         self, rawtargets: Iterable[Union[ModuleType, DeclarativeMeta]], depth: Optional[int], /
-    ) -> Schema:
-        definitions = super().transform(rawtargets, depth)
+    ) -> Result[Schema, str]:
+        definitions_result = super().transform(rawtargets, depth)
+
+        if definitions_result.is_err():
+            return Err(definitions_result.unwrap_err())
+
+        definitions = definitions_result.unwrap()
 
         self.replace_ref(definitions, "#/definitions/", "#/components/schemas/")
 
@@ -128,7 +164,8 @@ class OpenAPI3Transformer(OpenAPI2Transformer):
         if "schemas" not in definitions["components"]:
             definitions["components"]["schemas"] = {}
         definitions["components"]["schemas"] = definitions.pop("definitions", {})
-        return definitions
+
+        return Ok(definitions)
 
 
 def collect_models(module: ModuleType, /) -> Iterator[DeclarativeMeta]:
