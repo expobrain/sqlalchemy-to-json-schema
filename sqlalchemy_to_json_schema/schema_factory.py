@@ -440,9 +440,6 @@ class SchemaFactory:
                             if column.doc:
                                 sub["description"] = column.doc
 
-                            if overrides is None:
-                                raise RuntimeError("overrides is None")
-
                             if column.name in overrides:
                                 overrides.overrides(sub)
                             if opts:
