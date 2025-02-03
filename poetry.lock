@@ -937,13 +937,13 @@ files = [
 
 [[package]]
 name = "types-pygments"
-version = "2.18.0.20240506"
+version = "2.19.0.20250107"
 description = "Typing stubs for Pygments"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "types-Pygments-2.18.0.20240506.tar.gz", hash = "sha256:4b4c37812c87bbde687dbf27adf5bac593745a321e57f678dbc311571ba2ac9d"},
-    {file = "types_Pygments-2.18.0.20240506-py3-none-any.whl", hash = "sha256:11c90bc1737c9af55e5569558b88df7c2233e12325cb516215f722271444e91d"},
+    {file = "types_Pygments-2.19.0.20250107-py3-none-any.whl", hash = "sha256:34a555ed327f249daed18c6309e6e62770cdb8b9c321029ba7fd852d10b16f10"},
+    {file = "types_pygments-2.19.0.20250107.tar.gz", hash = "sha256:94de72c7f09b956c518f566e056812c698272a7a03a9cd81f0065576c6bd3219"},
 ]
 
 [package.dependencies]
@@ -1022,4 +1022,4 @@ dev = ["black (>=19.3b0)", "pytest (>=4.6.2)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "44c007bc7e56fa6253f4c7499b9d4bb9931756753b9670187fe1e5001868f612"
+content-hash = "1ab07718a110cd121cd85d1580f8eda09d7c3455d5afa3bf46ef10ea9cafc41a"
