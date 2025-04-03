@@ -977,19 +977,18 @@ files = [
 
 [[package]]
 name = "types-pygments"
-version = "2.18.0.20240506"
+version = "2.19.0.20250305"
 description = "Typing stubs for Pygments"
 optional = false
-python-versions = ">=3.8"
+python-versions = ">=3.9"
 groups = ["dev"]
 files = [
-    {file = "types-Pygments-2.18.0.20240506.tar.gz", hash = "sha256:4b4c37812c87bbde687dbf27adf5bac593745a321e57f678dbc311571ba2ac9d"},
-    {file = "types_Pygments-2.18.0.20240506-py3-none-any.whl", hash = "sha256:11c90bc1737c9af55e5569558b88df7c2233e12325cb516215f722271444e91d"},
+    {file = "types_pygments-2.19.0.20250305-py3-none-any.whl", hash = "sha256:ca88aae5ec426f9b107c0f7adc36dc096d2882d930a49f679eaf4b8b643db35d"},
+    {file = "types_pygments-2.19.0.20250305.tar.gz", hash = "sha256:044c50e80ecd4128c00a7268f20355e16f5c55466d3d49dfda09be920af40b4b"},
 ]
 
 [package.dependencies]
 types-docutils = "*"
-types-setuptools = "*"
 
 [[package]]
 name = "types-python-dateutil"
@@ -1070,4 +1069,4 @@ dev = ["black (>=19.3b0) ; python_version >= \"3.6\"", "pytest (>=4.6.2)"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.9"
-content-hash = "44c007bc7e56fa6253f4c7499b9d4bb9931756753b9670187fe1e5001868f612"
+content-hash = "c396e66e97aec253b86bfa0e9c072dd39f3371d3b3f504dab83eb7eded4b49ab"
