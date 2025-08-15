@@ -982,14 +982,14 @@ referencing = "*"
 
 [[package]]
 name = "types-mock"
-version = "5.1.0.20240425"
+version = "5.2.0.20250809"
 description = "Typing stubs for mock"
 optional = false
-python-versions = ">=3.8"
+python-versions = ">=3.9"
 groups = ["dev"]
 files = [
-    {file = "types-mock-5.1.0.20240425.tar.gz", hash = "sha256:5281a645d72e827d70043e3cc144fe33b1c003db084f789dc203aa90e812a5a4"},
-    {file = "types_mock-5.1.0.20240425-py3-none-any.whl", hash = "sha256:d586a01d39ad919d3ddcd73de6cde73ca7f3c69707219f722d1b8d7733641ad7"},
+    {file = "types_mock-5.2.0.20250809-py3-none-any.whl", hash = "sha256:e81a5f5ae222b0a0e92401cb429ed44e5dc238f900e876dc6183cc5e649f336d"},
+    {file = "types_mock-5.2.0.20250809.tar.gz", hash = "sha256:9548ebc2fbb3859f0765c8215f0b063897a58a58930f95467a814a9c9de76b16"},
 ]
 
 [[package]]
@@ -1089,4 +1089,4 @@ dev = ["black (>=19.3b0) ; python_version >= \"3.6\"", "pytest (>=4.6.2)"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.9"
-content-hash = "4d634f8900c5adb9b169028382798cf664c2535a24c63f8b7216aca433d82fdb"
+content-hash = "e6fa96dba09f9049cb703f741915b16c1457c0cc17e18c7073d354e820c7e37b"
