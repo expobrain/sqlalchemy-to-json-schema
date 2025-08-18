@@ -943,14 +943,14 @@ markers = {main = "python_version < \"3.11\"", dev = "python_full_version <= \"3
 
 [[package]]
 name = "types-colorama"
-version = "0.4.15.20240311"
+version = "0.4.15.20250801"
 description = "Typing stubs for colorama"
 optional = false
-python-versions = ">=3.8"
+python-versions = ">=3.9"
 groups = ["dev"]
 files = [
-    {file = "types-colorama-0.4.15.20240311.tar.gz", hash = "sha256:a28e7f98d17d2b14fb9565d32388e419f4108f557a7d939a66319969b2b99c7a"},
-    {file = "types_colorama-0.4.15.20240311-py3-none-any.whl", hash = "sha256:6391de60ddc0db3f147e31ecb230006a6823e81e380862ffca1e4695c13a0b8e"},
+    {file = "types_colorama-0.4.15.20250801-py3-none-any.whl", hash = "sha256:b6e89bd3b250fdad13a8b6a465c933f4a5afe485ea2e2f104d739be50b13eea9"},
+    {file = "types_colorama-0.4.15.20250801.tar.gz", hash = "sha256:02565d13d68963d12237d3f330f5ecd622a3179f7b5b14ee7f16146270c357f5"},
 ]
 
 [[package]]
@@ -1089,4 +1089,4 @@ dev = ["black (>=19.3b0) ; python_version >= \"3.6\"", "pytest (>=4.6.2)"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.9"
-content-hash = "1f03b6e02d9404b592f92721c156d395a807c08c7ba7b85219033516ee51847f"
+content-hash = "7443d3a78a13c4a1ee763ff19fcf2bc44354a2a164cff221a7bf9c0d7ded5605"
