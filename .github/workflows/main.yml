@@ -16,7 +16,7 @@ jobs:
         with:
           python-version: "3.9"
       - name: Cache multiple paths
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.cache/pip
@@ -40,7 +40,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Cache multiple Pips
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.cache/pip
@@ -65,7 +65,7 @@ jobs:
         with:
           python-version: "3.9"
       - name: Cache Pip
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.cache/pip
