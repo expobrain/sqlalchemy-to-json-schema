@@ -25,7 +25,7 @@ jobs:
             ~/.cache/pre-commit
           key: ${{ runner.os }}-3.9-${{ hashFiles('**/.pre-commit-config.yaml') }}
       - uses: browniebroke/pre-commit-autoupdate-action@main
-      - uses: peter-evans/create-pull-request@v7
+      - uses: peter-evans/create-pull-request@v8
         if: always()
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
