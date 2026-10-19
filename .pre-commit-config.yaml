@@ -26,7 +26,7 @@ repos:
           - --autofix
       - id: trailing-whitespace
   - repo: https://github.com/myint/autoflake
-    rev: v2.3.3
+    rev: v2.4.0
     hooks:
       - id: autoflake
         args:
@@ -38,20 +38,20 @@ repos:
             "--remove-duplicate-keys",
           ]
   - repo: https://github.com/pycqa/flake8
-    rev: 7.3.0
+    rev: 7.4.1
     hooks:
       - id: flake8
         additional_dependencies:
           - flake8-bugbear
           - flake8-datetime-utcnow-plugin
   - repo: https://github.com/asottile/pyupgrade
-    rev: v3.21.2
+    rev: v3.22.0
     hooks:
       - id: pyupgrade
         args:
           - "--py39-plus"
   - repo: https://github.com/pycqa/isort
-    rev: 8.0.1
+    rev: 10.0.0b1
     hooks:
       - id: isort
   - repo: https://github.com/pycqa/bandit
@@ -73,7 +73,7 @@ repos:
           - "-lll"
           - "tests"
   - repo: https://github.com/psf/black-pre-commit-mirror
-    rev: 26.3.1
+    rev: 26.10.1
     hooks:
       - id: black
   - repo: https://github.com/pre-commit/pygrep-hooks
